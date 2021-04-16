@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Бронирования</h1>
+<body>
+{% if current_user.id == 1%}
+<p><a href="/addjob" class="btn btn-success">Добавить работу</a></p>
+{% endif %}
+<p>
+<table>
+    <tr class="table-danger">
+        <td width="17%">Number_booking</td>
+        <td width="8%">Room</td>
+        <td width="15%">Guest</td>
+        <td width="15%">Check_in</td>
+        <td width="15%">Check_out</td>
+        <td width="15%">Quantity</td>
+        <td width="15%">Status</td>
+    </tr>
+    {% for item in booking %}
+    <tr class="table-warning">
+        <td>{{item.number_booking}}</td>
+        <td>{{item.rooms.code}}</td>
+        <td>{{item.guests.name}} {{item.guests.surname}}</td>
+        <td>{{item.check_in}}</td>
+        <td>{{item.check_out}}</td>
+        <td>{{item.quantity}}</td>
+        <td>{% if item.status%}active{%else%}cancelled{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+</p>
+
+
+</body>
+{% endblock %}
