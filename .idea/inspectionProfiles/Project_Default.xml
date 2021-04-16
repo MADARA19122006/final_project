@@ -1,0 +1,28 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="W391" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnreachableCodeInspection" enabled="true" level="INFORMATION" enabled_by_default="true" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="int.__getitem__" />
+          <option value="str.__invert__" />
+          <option value="str.get_x" />
+          <option value="str.get_y" />
+          <option value="ui_file.designer2" />
+          <option value="tuple.*" />
+          <option value="PyQt5.QtCore.sender.text" />
+          <option value="bytes.__setitem__" />
+          <option value="int.transformed" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
