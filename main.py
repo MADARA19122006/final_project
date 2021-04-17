@@ -7,6 +7,7 @@ from data.availability import Availability
 from data.booking import Booking
 from data.guests import Guests
 from data.rooms import Rooms
+from forms.admin_form import AdminForm
 from forms.choice_room import RoomForm
 from forms.date_choice import DateForm
 from forms.login_form import LoginForm
@@ -108,7 +109,8 @@ def booking():
         print(frm.rooms)
         for el in zip(room_nlist, frm.rooms):
             el[1].choices = list(range(el[0]['qty'] + 1))
-        return render_template('room_choice.html', title='Выбор номеров', room_nlist=room_nlist, form=frm, n=len(room_nlist))
+        return render_template('room_choice.html', title='Выбор номеров', room_nlist=room_nlist,
+                               form=frm, n=len(room_nlist))
     return render_template('date_choice.html', title='Поиск номеров', form=form)
 
 
@@ -124,11 +126,22 @@ def testform():
     return render_template('testform.html', title='Dynamic form 1', form=form)
 
 
-@app.route('/admin/allbookings')
+@app.route('/admin/allbookings', methods=['GET', 'POST'])
 def allbookings():
+    form = AdminForm(data={'check_in_from': datetime.date.today()})
+    if form.validate_on_submit():
+        if form.check_in_from:
+            check_in_from = form.check_in_from
+        else:
+            check_in_from = datetime.date(1900, 1, 1)
+        # db_sess = db_session.create_session()
+        # booking = db_sess.query(Booking).filter(Booking.check_in >= check_in_from,
+        #                                         Booking.check_in <= form.check_in_to,
+        #                                         Booking.check_out >= form.check_out_from,
+        #                                         Booking.check_out <= form.check_out_to)
     db_sess = db_session.create_session()
     booking = db_sess.query(Booking).filter(Booking.check_in >= datetime.date.today())
-    return render_template("table_booking.html", booking=booking)
+    return render_template("table_booking.html", booking=booking, form=form)
 
 
 if __name__ == '__main__':
