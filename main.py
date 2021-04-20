@@ -130,18 +130,68 @@ def testform():
 def allbookings():
     form = AdminForm(data={'check_in_from': datetime.date.today()})
     if form.validate_on_submit():
-        if form.check_in_from:
-            check_in_from = form.check_in_from
+        if form.check_in_from.data:
+            check_in_from = form.check_in_from.data
         else:
             check_in_from = datetime.date(1900, 1, 1)
-        # db_sess = db_session.create_session()
-        # booking = db_sess.query(Booking).filter(Booking.check_in >= check_in_from,
-        #                                         Booking.check_in <= form.check_in_to,
-        #                                         Booking.check_out >= form.check_out_from,
-        #                                         Booking.check_out <= form.check_out_to)
+        if form.check_in_to.data:
+            check_in_to = form.check_in_to.data
+        else:
+            check_in_to = datetime.date(2100, 1, 1)
+        if form.check_out_from.data:
+            check_out_from = form.check_out_from.data
+        else:
+            check_out_from = datetime.date(1900, 1, 1)
+        if form.check_out_to.data:
+            check_out_to = form.check_out_to.data
+        else:
+            check_out_to = datetime.date(2100, 1, 1)
+        if form.number_booking.data:
+            db_sess = db_session.create_session()
+            booking = db_sess.query(Booking).filter(
+                Booking.number_booking == form.number_booking.data,
+                Booking.check_in >= check_in_from,
+                Booking.check_in <= check_in_to,
+                Booking.check_out >= check_out_from,
+                Booking.check_out <= check_out_to)
+            return render_template("admin.html", booking=booking, form=form)
+        else:
+            db_sess = db_session.create_session()
+            booking = db_sess.query(Booking).filter(Booking.check_in >= check_in_from,
+                                                    Booking.check_in <= check_in_to,
+                                                    Booking.check_out >= check_out_from,
+                                                    Booking.check_out <= check_out_to)
+
+            return render_template("admin.html", booking=booking, form=form)
     db_sess = db_session.create_session()
     booking = db_sess.query(Booking).filter(Booking.check_in >= datetime.date.today())
-    return render_template("table_booking.html", booking=booking, form=form)
+    return render_template("admin.html", booking=booking, form=form)
+
+
+@app.route('/overview/', methods=['GET', 'POST'])
+@app.route('/overview/<date>', methods=['GET', 'POST'])
+def ssss(date=None):
+    if not date:
+        date = datetime.date.today()
+    else:
+        date = datetime.datetime.strptime(date, '%Y%m%d').date()
+    datebkw = date - datetime.timedelta(days=14)
+    datefwd = date + datetime.timedelta(days=14)
+    db_sess = db_session.create_session()
+    availability = db_sess.query(Availability).filter(Availability.date >= date,
+                                                      Availability.date < datefwd).order_by(Availability.date)
+    s = {}
+
+    for i in availability:
+        if i.rooms.code not in s:
+            s[i.rooms.code] = [[i.date, i.quantity_rooms, i.price]]
+        else:
+            s[i.rooms.code].append([i.date, i.quantity_rooms, i.price])
+    m = []
+    for i in range(14):
+        m.append(date + datetime.timedelta(days=i))
+    print(s)
+    return render_template("overview.html", s=s, date=m, datebkw=datebkw.strftime('%Y%m%d'), datefwd=datefwd.strftime('%Y%m%d'))
 
 
 if __name__ == '__main__':

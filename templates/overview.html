@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Бронирования</h1>
+<body>
+<a class="btn btn-primary" href="/ssss/{{ datebkw }}"><<</a>
+<a class="btn btn-primary" href="/ssss/{{ datefwd }}">>></a>
+<table>
+    <tr class="table-danger">
+        <td width="5%" align="center">code</td>
+        {% for i in date %}
+            <td width="5%" align="center">{{i}}</td>
+        {% endfor %}
+    </tr>
+    {% for item in s %}
+        <tr class="table-warning">
+            <td>{{item}}</td>
+            {% for i in s[item] %}
+                <td align="center">{{i[1]}}<br>{{i[2]}}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+</p>
+
+
+</body>
+{% endblock %}

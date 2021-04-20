@@ -14,5 +14,6 @@ class Booking(SqlAlchemyBase, SerializerMixin):
     quantity = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     status = sqlalchemy.Column(sqlalchemy.Boolean, nullable=True)
     number_booking = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    price = sqlalchemy.Column(sqlalchemy.Integer, default=0)
     rooms = orm.relation('Rooms')
     guests = orm.relation('Guests')

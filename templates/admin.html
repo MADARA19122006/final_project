@@ -7,19 +7,26 @@
 <p><a href="/addjob" class="btn btn-success">Добавить работу</a></p>
 {% endif %}
 <p>
-<form action="" method="post">
+<form class="admin_form" action="" method="post">
     {{ form.hidden_tag() }}
 <p>
     {{ form.check_in_from.label }}
     {{ form.check_in_from(class="form-control", type="date") }}
     {{ form.check_in_to.label }}
     {{ form.check_in_to(class="form-control", type="date") }}
+    {{ form.check_out_from.label }}
+    {{ form.check_out_from(class="form-control", type="date") }}
+    {{ form.check_out_to.label }}
+    {{ form.check_out_to(class="form-control", type="date") }}
+    {{ form.number_booking.label }}
+    {{ form.number_booking(class="form-control", type="int") }}
     {% for error in form.check_in_from.errors %}
         <div class="alert alert-danger" role="alert">
             {{ error }}
         </div>
     {% endfor %}
 </p>
+<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
 </form>
 <table>
     <tr class="table-danger">
