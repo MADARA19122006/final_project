@@ -1,5 +1,5 @@
-from flask import Flask, render_template, redirect
-from flask_restful import Api
+from flask import Flask, render_template, redirect, request
+from flask_restful import Api, abort
 from flask_login import LoginManager, login_required, logout_user, login_user
 
 from data import db_session
@@ -10,6 +10,7 @@ from data.rooms import Rooms
 from forms.admin_form import AdminForm
 from forms.choice_room import RoomForm
 from forms.date_choice import DateForm
+from forms.edit import EditForm
 from forms.login_form import LoginForm
 from forms.register_form import RegisterForm
 import datetime
@@ -179,9 +180,9 @@ def ssss(date=None):
     datefwd = date + datetime.timedelta(days=14)
     db_sess = db_session.create_session()
     availability = db_sess.query(Availability).filter(Availability.date >= date,
-                                                      Availability.date < datefwd).order_by(Availability.date)
+                                                      Availability.date < datefwd).order_by(
+        Availability.date)
     s = {}
-
     for i in availability:
         if i.rooms.code not in s:
             s[i.rooms.code] = [[i.date, i.quantity_rooms, i.price]]
@@ -190,8 +191,35 @@ def ssss(date=None):
     m = []
     for i in range(14):
         m.append(date + datetime.timedelta(days=i))
-    print(s)
-    return render_template("overview.html", s=s, date=m, datebkw=datebkw.strftime('%Y%m%d'), datefwd=datefwd.strftime('%Y%m%d'))
+    return render_template("overview.html", s=s, date=m, datebkw=datebkw.strftime('%Y%m%d'),
+                           datefwd=datefwd.strftime('%Y%m%d'))
+
+
+@app.route('/edit/<date>/<code>', methods=['GET', 'POST'])
+def edit(date, code):
+    form = EditForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        room_id = db_sess.query(Rooms).filter(Rooms.code == code).first().id
+        edit = db_sess.query(Availability).filter(Availability.room == room_id, Availability.date == date).first()
+        if edit:
+            form.quantity.data = edit.quantity_rooms
+            form.price.data = edit.price
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        room_id = db_sess.query(Rooms).filter(Rooms.code == code).first().id
+        edit = db_sess.query(Availability).filter(Availability.room == room_id,
+                                                  Availability.date == date).first()
+        if edit:
+            edit.quantity_rooms = form.quantity.data
+            edit.price = form.price.data
+            db_sess.commit()
+            return redirect('/overview')
+        else:
+            abort(404)
+    return render_template('edit.html', title='Редактирование', form=form)
 
 
 if __name__ == '__main__':
