@@ -1,6 +1,9 @@
-from flask import Flask, render_template, redirect, request
+import json
+
+from flask import Flask, render_template, redirect, request, session, url_for
 from flask_restful import Api, abort
 from flask_login import LoginManager, login_required, logout_user, login_user
+from sqlalchemy import func
 
 from data import db_session
 from data.availability import Availability
@@ -20,6 +23,13 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 api = Api(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
+def availroom(room_id, checkin, checkout):
+    db_sess = db_session.create_session()
+    return db_sess.query(func.min(Availability.quantity_rooms)).filter(Availability.room == room_id,
+                                                              Availability.date >= checkin,
+                                                              Availability.date < checkout).scalar()
 
 
 def main():
@@ -89,42 +99,93 @@ def booking():
     form = DateForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        rooms = db_sess.query(Availability).filter(Availability.date >= form.check_in.data,
-                                                   Availability.date < form.check_out.data).all()
 
-        room_list = {}
-        for i in rooms:
-            if i.room in room_list:
-                if i.quantity_rooms < room_list[i.room]:
-                    room_list[i.room] = i.quantity_rooms
+        rooms = {}
+
+        for i in db_sess.query(Availability).filter(Availability.date >= form.check_in.data,
+                                                    Availability.date < form.check_out.data).all():
+            if i.room in rooms:
+                rooms[i.room]['price'] += i.price
+                if i.quantity_rooms < rooms[i.room]['qty']:
+                    rooms[i.room]['qty'] = i.quantity_rooms
             else:
-                room_list[i.room] = i.quantity_rooms
-        room_nlist = []
-        for room_id, qty in room_list.items():
-            if qty > 0:
-                room_type = db_sess.query(Rooms).get(room_id)
-                room_nlist.append(
-                    {'name': room_type.name_room, 'description': room_type.description, 'qty': qty})
+                rooms[i.room] = {'name': i.rooms.name_room, 'description': i.rooms.description,
+                                 'qty': i.quantity_rooms, 'price': i.price}
 
-        frm = RoomForm(data={'rooms': [0] * len(room_nlist)})
-        print(frm.rooms)
-        for el in zip(room_nlist, frm.rooms):
-            el[1].choices = list(range(el[0]['qty'] + 1))
-        return render_template('room_choice.html', title='Выбор номеров', room_nlist=room_nlist,
-                               form=frm, n=len(room_nlist))
+        print(rooms)
+        params = json.dumps({'rooms': rooms, 'checkin': form.check_in.data.strftime('%Y%m%d'),
+                             'checkout': form.check_out.data.strftime('%Y%m%d')})
+        session['params'] = params
+        return redirect(url_for('booking2', params=params))
+
     return render_template('date_choice.html', title='Поиск номеров', form=form)
 
 
-@app.route('/testform', methods=['GET', 'POST'])
-def testform():
-    form = RoomForm(data={'rooms': [0] * 3})
-    print(form.rooms)
-    available = [3, 4, 5, 1, 7]
-    for n, el in enumerate(form.rooms):
-        el.choices = list(range(available[n] + 1))
-    if form.validate_on_submit():
-        pass
-    return render_template('testform.html', title='Dynamic form 1', form=form)
+@app.route('/booking/step2', methods=['GET', 'POST'])
+def booking2():
+    # params = request.args['params']  # counterpart for url_for()
+    params = json.loads(session['params'])
+
+    rooms = params['rooms']
+    room_nlist = []
+    for key, value in rooms.items():
+        if value['qty'] > 0:
+            value['id'] = key
+            room_nlist.append(value)
+    form = RoomForm(data={'rooms': [0] * len(room_nlist), 'ids': [el['id'] for el in room_nlist],
+                          'price': [el['price'] for el in room_nlist], 'checkin': params['checkin'],
+                          'checkout': params['checkout']})
+    # if form.validate_on_submit():
+    #     print('validate!')
+    #     return render_template('success.html', title='Success!', data=form.checkin.data)
+
+    for el in zip(room_nlist, form.rooms):
+        el[1].choices = list(range(el[0]['qty'] + 1))
+    return render_template('room_choice.html', title='Выбор номеров', room_nlist=room_nlist,
+                           form=form, n=len(room_nlist))
+
+
+@app.route('/booking/step3', methods=['GET', 'POST'])
+def booking3():
+    if request.method == 'POST':
+        form = request.form
+        print(form)
+        checkin = datetime.datetime.strptime(form['checkin'], '%Y%m%d').date()
+        checkout = datetime.datetime.strptime(form['checkout'], '%Y%m%d').date()
+        rooms_enough = True
+        adding = True
+        bookingdata = []  # format [[qty, room id, room name, price],...]
+        db_sess = db_session.create_session()
+        for i in range(len(form) // 3 - 1):
+            qty = int(form[f'rooms-{str(i)}'])
+            if qty:
+                ids = int(form[f'ids-{str(i)}'])
+                if qty > availroom(ids, checkin, checkout):
+                    return '<h1>Ой! Похоже, вы не успели, эти номера уже забронированы! Попробуйте повторить бронирование.</h1>'
+                bookingdata.append([qty, ids, db_sess.query(Rooms).get(ids).name_room, int(form[f'price-{str(i)}'])])
+        if not bookingdata:
+            return '<h1>Не выбрано ни одного номера!</h1>'
+        for el in bookingdata:
+            for entry in db_sess.query(Availability).filter(Availability.date >= checkin,
+                                                            Availability.date < checkout,
+                                                            Availability.room == el[1]):
+                entry.quantity_rooms -= el[0]
+
+            newbooking = Booking(
+                room=el[1],
+                guest=2,  # current_user.id,
+                check_in=checkin,
+                check_out=checkout,
+                quantity=el[0],
+                status=True,
+                number_booking=db_sess.query(func.max(Booking.number_booking)).scalar() + 1,
+                price=el[3]
+            )
+            db_sess.add(newbooking)
+            db_sess.commit()
+
+        return render_template('success.html', title='Success!', bookingdata=bookingdata, checkin=checkin,
+                               checkout=checkout)
 
 
 @app.route('/admin/allbookings', methods=['GET', 'POST'])
