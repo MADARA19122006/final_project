@@ -20,11 +20,8 @@
     {{ form.check_out_to(class="form-control", type="date") }}
     {{ form.number_booking.label }}
     {{ form.number_booking(class="form-control", type="int") }}
-    {% for error in form.check_in_from.errors %}
-        <div class="alert alert-danger" role="alert">
-            {{ error }}
-        </div>
-    {% endfor %}
+
+
 </p>
 <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
 </form>

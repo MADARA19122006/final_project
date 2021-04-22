@@ -3,23 +3,31 @@
 {% block content %}
 <h1>Выбор номеров</h1>
 <body>
-<form action="/booking/step3" method="post" novalidate>
-<table class="table">
-{% for i in range(n) %}
+<form action="" method="post">
+    {{ form.hidden_tag() }}
+    <h2>Заезд: {{ checkin }}</h2>
+    <h2>Выезд: {{ checkout }}</h2>
+    <table class="table">
+        {% for i in range(n) %}
 
-    <tr class="table-secondary">
-        <td width="15%">{{ room_nlist[i].name }}</td>
-        <td width="30%">{{ room_nlist[i].description }}</td>
-        <td width="15%">{{ room_nlist[i].price }} RUR</td>
-        <td width="15%">{{form.rooms[i]}}</td>
-        <td width="10%">{{form.ids[i]}}{{form.price[i]}}</td>
-    </tr>
+        <tr class="table-secondary">
+            <td width="15%">{{ room_nlist[i].name }}</td>
+            <td width="30%">{{ room_nlist[i].description }}</td>
+            <td width="15%">{{ room_nlist[i].price }} RUR</td>
+            <td width="15%">{{ form.rooms[i] }}</td>
+            <td width="10%">{{ form.ids[i] }}{{ form.price[i] }}</td>
+        </tr>
 
-{% endfor %}
-</table>
-    {{ form.checkin(type="hidden") }}{{ form.checkout(type="hidden") }}
-    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-        <div>{{ message }}</div>
-   </form>
+        {% endfor %}
+    </table>
+
+    {% if current_user.is_authenticated %}
+        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    {% else %}
+        <p>Для продолжения <a href="/login/booking2">войдите</a> или <a href="/register/booking2">зарегистрируйтесь</a></p>
+    {% endif %}
+
+    <div>{{ message }}</div>
+</form>
 </body>
 {% endblock %}

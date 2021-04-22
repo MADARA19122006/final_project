@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Бронирование подтверждено!</h1>
+<h1>Бронирование #{{ booknumber }} подтверждено!</h1>
 <body>
 <h2>Заезд: {{ checkin }}</h2>
 <h2>Выезд: {{ checkout }}</h2>
@@ -18,6 +18,11 @@
         <td width="20%">{{ el[3] }}</td>
     </tr>
     {% endfor %}
+    <tr class="table-secondary">
+        <td width="20%"></td>
+        <td width="20%">Total:</td>
+        <td width="20%">{{ total }}</td>
+    </tr>
 </table>
 </body>
 {% endblock %}
