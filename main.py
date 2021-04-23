@@ -241,7 +241,7 @@ def canceled(n):
             for el in booklist:
                 el.status = False
             db_sess.commit()
-            return render_template("overview.html", x=booklist)
+            return render_template("delete.html", x=booklist)
 
 
 @login_required
