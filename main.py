@@ -5,7 +5,7 @@ from flask_restful import Api, abort
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user
 from sqlalchemy import func
 
-from data import db_session
+from data import db_session, api_availability
 from data.availability import Availability
 from data.booking import Booking
 from data.guests import Guests
@@ -35,6 +35,7 @@ def availroom(room_id, checkin, checkout):
 
 def main():
     db_session.global_init("db/final_project.db")
+    api.add_resource(api_availability.AvailabilityAdd, '/api/availability')
     app.run()
 
 
@@ -105,6 +106,7 @@ def login(redir=None):
 
 
 @app.route('/booking', methods=['GET', 'POST'])
+@app.route('/booking/', methods=['GET', 'POST'])
 def booking():
     form = DateForm()
     if form.validate_on_submit():
@@ -125,6 +127,7 @@ def booking():
         params = json.dumps({'rooms': rooms, 'checkin': form.check_in.data.strftime('%Y%m%d'),
                              'checkout': form.check_out.data.strftime('%Y%m%d')})
         session['params'] = params
+        session['csrf_tokens'] = json.dumps({'csrf_tokens': []})  # для защиты от повторной отправки формы
         # return redirect(url_for('booking2', params=params))
         return redirect(url_for('booking2'))
 
@@ -147,43 +150,50 @@ def booking2():
             'price': [el['price'] for el in room_nlist]}
     form = RoomForm(data=data)
     if form.validate_on_submit():
-        print(form.data)
+        csrf_tokens = json.loads(session['csrf_tokens'])['csrf_tokens']
+        if form.csrf_token.data not in csrf_tokens:  # защита от повторной отправки формы
+            csrf_tokens.append(form.csrf_token.data)
+            session['csrf_tokens'] = json.dumps({'csrf_tokens': csrf_tokens})
+            print(form.data)
+            print(session['csrf_tokens'])
 
-        bookingdata = []  # format [[qty, room id, room name, price],...]
-        db_sess = db_session.create_session()
-        for i in range(len(form.rooms)):
-            qty = int(form.rooms[i].data)
-            if qty:
-                ids = int(form.ids[i].data)
-                if qty > availroom(ids, checkin, checkout):
-                    return '<h1>Ой! Похоже, вы не успели, эти номера уже забронированы! Попробуйте повторить бронирование.</h1>'
-                bookingdata.append([qty, ids, db_sess.query(Rooms).get(ids).name_room, int(form.price[i].data)])
-        if not bookingdata:
-            return '<h1>Не выбрано ни одного номера!</h1>'
-        booknumber = db_sess.query(func.max(Booking.number_booking)).scalar() + 1
-        total = 0
-        for el in bookingdata:
-            total += el[3]
-            for entry in db_sess.query(Availability).filter(Availability.date >= checkin,
-                                                            Availability.date < checkout,
-                                                            Availability.room == el[1]):
-                entry.quantity_rooms -= el[0]
+            bookingdata = []  # format [[qty, room id, room name, price],...]
+            db_sess = db_session.create_session()
+            for i in range(len(form.rooms)):
+                qty = int(form.rooms[i].data)
+                if qty:
+                    ids = int(form.ids[i].data)
+                    if qty > availroom(ids, checkin, checkout):
+                        return '<h1>Ой! Похоже, вы не успели, эти номера уже забронированы! Попробуйте повторить бронирование.</h1>'
+                    bookingdata.append([qty, ids, db_sess.query(Rooms).get(ids).name_room, int(form.price[i].data)])
+            if not bookingdata:
+                return '<h1>Не выбрано ни одного номера!</h1>'
+            booknumber = db_sess.query(func.max(Booking.number_booking)).scalar() + 1
+            total = 0
+            for el in bookingdata:
+                total += el[3]
+                for entry in db_sess.query(Availability).filter(Availability.date >= checkin,
+                                                                Availability.date < checkout,
+                                                                Availability.room == el[1]):
+                    entry.quantity_rooms -= el[0]
 
-            newbooking = Booking(
-                room=el[1],
-                guest=current_user.id,
-                check_in=checkin,
-                check_out=checkout,
-                quantity=el[0],
-                status=True,
-                number_booking=booknumber,
-                price=el[3]
-            )
-            db_sess.add(newbooking)
-            db_sess.commit()
+                newbooking = Booking(
+                    room=el[1],
+                    guest=current_user.id,
+                    check_in=checkin,
+                    check_out=checkout,
+                    quantity=el[0],
+                    status=True,
+                    number_booking=booknumber,
+                    price=el[3]
+                )
+                db_sess.add(newbooking)
+                db_sess.commit()
 
-        return render_template('success.html', title='Success!', bookingdata=bookingdata, checkin=checkin,
-                               checkout=checkout, total=total, booknumber=booknumber)
+            return render_template('success.html', title='Success!', bookingdata=bookingdata, checkin=checkin,
+                                   checkout=checkout, total=total, booknumber=booknumber)
+        else:
+            return redirect('/booking')
 
     for el in zip(room_nlist, form.rooms):
         el[1].choices = list(range(min(el[0]['qty'] + 1, 6)))
