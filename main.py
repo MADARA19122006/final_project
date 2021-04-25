@@ -112,6 +112,9 @@ def login(redir=None):
 def booking():
     form = DateForm()
     if form.validate_on_submit():
+        if form.check_in.data >= form.check_out.data:
+            return render_template('date_choice.html', title='Поиск номеров', form=form,
+                                   message='Дата выезда должна быть позже даты заезда')
         db_sess = db_session.create_session()
 
         rooms = {}
