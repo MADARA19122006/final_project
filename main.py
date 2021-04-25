@@ -41,7 +41,6 @@ def main():
     app.run()
 
 
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
@@ -141,6 +140,13 @@ def booking():
                 rooms[i.room] = {'name': i.rooms.name_room, 'description': i.rooms.description,
                                  'qty': i.quantity_rooms, 'price': i.price}
 
+        for key, value in rooms.items():
+            if value['qty'] > 0:
+                break
+        else:
+            return render_template('date_choice.html', title='Поиск номеров', form=form,
+                                   message='К сожалению, на выбранные даты нет номеров')
+
         params = json.dumps({'rooms': rooms, 'checkin': form.check_in.data.strftime('%Y%m%d'),
                              'checkout': form.check_out.data.strftime('%Y%m%d')})
         session['params'] = params
@@ -218,7 +224,8 @@ def booking2():
     for el in zip(room_nlist, form.rooms):
         el[1].choices = list(range(min(el[0]['qty'] + 1, 6)))
     return render_template('room_choice.html', title='Выбор номеров', room_nlist=room_nlist,
-                           form=form, n=len(room_nlist), checkin=checkin, checkout=checkout)
+                           form=form, n=len(room_nlist), checkin=checkin, checkout=checkout,
+                           redir='/booking2')
 
 
 @login_required

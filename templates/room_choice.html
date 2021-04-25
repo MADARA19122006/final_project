@@ -24,7 +24,7 @@
     {% if current_user.is_authenticated %}
         <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {% else %}
-        <p>Для продолжения <a href="/login/booking2">войдите</a> или <a href="/register/booking2">зарегистрируйтесь</a></p>
+        <p>Для продолжения <a href="/login{{ redir }}">войдите</a> или <a href="/register{{ redir }}">зарегистрируйтесь</a></p>
     {% endif %}
 
     <div>{{ message }}</div>
