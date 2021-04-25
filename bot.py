@@ -1,23 +1,21 @@
+import json
+
 from telegram.ext import Updater, MessageHandler, Filters, CallbackContext, CommandHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-
-from data import db_session
+from requests import get
 
 
 def echo(update, context):
     update.message.reply_text(f'Я получил сообщение {update.message.text}')
 
 
-reply_keyboard = [['/help', '/site'],
-                  ['/site']]
+reply_keyboard = [['/help', '/site']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 
 
 def main():
     updater = Updater("1797783540:AAFPXzqG6tbfgAWPPF6tQ0j05X7UJ10iAqE", use_context=True)
     dp = updater.dispatcher
-    text_handler = MessageHandler(Filters.text, echo)
-    dp.add_handler(text_handler)
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("site", site))
     dp.add_handler(CommandHandler("close", close_keyboard))
@@ -43,7 +41,16 @@ def site(update, context):
 
 
 def date(update, context):
-
+    text = update.message.text.split()
+    av = get('http://localhost:5000/api/bot',
+                       json={'check_in': text[0], 'check_out': text[1]}).json()
+    print(av)
+    if av:
+        for el in av:
+            reply_text = 'На выбранные даты в наличии:\n' + '\n'.join([f'{key}: {value}' for key, value in av.items()])
+    else:
+        reply_text = 'Нет свободных номеров на выбранные даты'
+    update.message.reply_text(reply_text)
 
 
 if __name__ == '__main__':

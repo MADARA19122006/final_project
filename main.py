@@ -1,6 +1,6 @@
 import json
 
-from flask import Flask, render_template, redirect, request, session, url_for
+from flask import Flask, render_template, redirect, request, session, url_for, send_from_directory
 from flask_restful import Api, abort
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user
 from sqlalchemy import func
@@ -39,6 +39,12 @@ def main():
     api.add_resource(api_booking.BookingGet, '/api/booking_get')
     api.add_resource(api_bot.Bot, '/api/bot')
     app.run()
+
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route("/")
@@ -114,7 +120,13 @@ def booking():
     if form.validate_on_submit():
         if form.check_in.data >= form.check_out.data:
             return render_template('date_choice.html', title='Поиск номеров', form=form,
-                                   message='Дата выезда должна быть позже даты заезда')
+                                   message='Дата выезда должна быть позже даты заезда!')
+        elif form.check_in.data < datetime.date.today():
+            return render_template('date_choice.html', title='Поиск номеров', form=form,
+                                   message='Дата заезда не должна быть в прошлом!')
+        elif form.check_out.data > datetime.date.today() + datetime.timedelta(days=366):
+            return render_template('date_choice.html', title='Поиск номеров', form=form,
+                                   message='Бронирование возможно максимум на год вперед!')
         db_sess = db_session.create_session()
 
         rooms = {}
