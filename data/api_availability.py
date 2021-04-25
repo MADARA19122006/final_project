@@ -16,8 +16,8 @@ class AvailabilityAdd(Resource):
         db_sess = db_session.create_session()
         for i in args['availability']:
             for ent in db_sess.query(Availability).filter(  # удаляем дубли записей
-                Availability.date == datetime.strptime(i['date'], '%Y%m%d').date(),
-                Availability.room == i['room']):
+                    Availability.date == datetime.strptime(i['date'], '%Y%m%d').date(),
+                    Availability.room == i['room']):
                 db_sess.delete(ent)
             entry = Availability(
                 date=datetime.strptime(i['date'], '%Y%m%d').date(),

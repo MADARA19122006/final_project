@@ -5,7 +5,7 @@ from flask_restful import Api, abort
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user
 from sqlalchemy import func
 
-from data import db_session, api_availability
+from data import db_session, api_availability, api_booking, api_bot
 from data.availability import Availability
 from data.booking import Booking
 from data.guests import Guests
@@ -36,6 +36,8 @@ def availroom(room_id, checkin, checkout):
 def main():
     db_session.global_init("db/final_project.db")
     api.add_resource(api_availability.AvailabilityAdd, '/api/availability')
+    api.add_resource(api_booking.BookingGet, '/api/booking_get')
+    api.add_resource(api_bot.Bot, '/api/bot')
     app.run()
 
 
@@ -127,7 +129,8 @@ def booking():
         params = json.dumps({'rooms': rooms, 'checkin': form.check_in.data.strftime('%Y%m%d'),
                              'checkout': form.check_out.data.strftime('%Y%m%d')})
         session['params'] = params
-        session['csrf_tokens'] = json.dumps({'csrf_tokens': []})  # для защиты от повторной отправки формы
+        session['csrf_tokens'] = json.dumps(
+            {'csrf_tokens': []})  # для защиты от повторной отправки формы
         # return redirect(url_for('booking2', params=params))
         return redirect(url_for('booking2'))
 
@@ -136,7 +139,6 @@ def booking():
 
 @app.route('/booking/step2', methods=['GET', 'POST'])
 def booking2():
-    # params = request.args['params']  # counterpart for url_for()
     params = json.loads(session['params'])
     checkin = datetime.datetime.strptime(params['checkin'], '%Y%m%d').date()
     checkout = datetime.datetime.strptime(params['checkout'], '%Y%m%d').date()
@@ -164,8 +166,10 @@ def booking2():
                 if qty:
                     ids = int(form.ids[i].data)
                     if qty > availroom(ids, checkin, checkout):
-                        return '<h1>Ой! Похоже, вы не успели, эти номера уже забронированы! Попробуйте повторить бронирование.</h1>'
-                    bookingdata.append([qty, ids, db_sess.query(Rooms).get(ids).name_room, int(form.price[i].data)])
+                        return '<h1>Ой! Похоже, вы не успели, эти номера' \
+                               ' уже забронированы! Попробуйте повторить бронирование.</h1>'
+                    bookingdata.append(
+                        [qty, ids, db_sess.query(Rooms).get(ids).name_room, int(form.price[i].data)])
             if not bookingdata:
                 return '<h1>Не выбрано ни одного номера!</h1>'
             booknumber = db_sess.query(func.max(Booking.number_booking)).scalar() + 1
@@ -190,7 +194,8 @@ def booking2():
                 db_sess.add(newbooking)
                 db_sess.commit()
 
-            return render_template('success.html', title='Success!', bookingdata=bookingdata, checkin=checkin,
+            return render_template('success.html', title='Success!', bookingdata=bookingdata,
+                                   checkin=checkin,
                                    checkout=checkout, total=total, booknumber=booknumber)
         else:
             return redirect('/booking')

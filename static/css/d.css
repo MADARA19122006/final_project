@@ -2,3 +2,7 @@ form.admin_form {
     size: 50px;
     max-width: 200px;
 }
+
+body {
+    background: url(/static/images/фон.jpg);
+}

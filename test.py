@@ -1,6 +1,4 @@
-from requests import post
+from requests import get
 
-
-print(post('http://localhost:5000/api/availability',
-           json={'availability': [{'date': '20210503', 'room': 1, 'qty': 4,
-                 'price': 3000}]}).json())
+print(get('http://localhost:5000/api/booking_get',
+           json={'check_in_from': '20210301', 'check_in_to': '20210506'}).json())
