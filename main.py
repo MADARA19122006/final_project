@@ -228,8 +228,8 @@ def booking2():
                            redir='/booking2')
 
 
-@login_required
 @app.route('/admin/allbookings', methods=['GET', 'POST'])
+@login_required
 def allbookings():
     if current_user.is_admin:
         form = AdminForm(data={'check_in_from': datetime.date.today()})
@@ -267,8 +267,8 @@ def allbookings():
         return render_template("admin.html", booking=booking, form=form)
 
 
-@login_required
 @app.route('/cancel/<n>', methods=['GET', 'POST'])
+@login_required
 def canceled(n):
     db_sess = db_session.create_session()
     booking = db_sess.query(Booking).filter(Booking.number_booking == n).first()
@@ -281,9 +281,9 @@ def canceled(n):
             return render_template("delete.html", x=booklist)
 
 
-@login_required
 @app.route('/overview/', methods=['GET', 'POST'])
 @app.route('/overview/<date>', methods=['GET', 'POST'])
+@login_required
 def overview(date=None):
     if current_user.is_admin:
         if not date:
@@ -309,8 +309,8 @@ def overview(date=None):
                                datefwd=datefwd.strftime('%Y%m%d'))
 
 
-@login_required
 @app.route('/edit/<date>/<code>', methods=['GET', 'POST'])
+@login_required
 def editday(date, code):
     if current_user.is_admin:
         form = EditForm()

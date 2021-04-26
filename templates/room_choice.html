@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="container-lg">
 <h1>Выбор номеров</h1>
-<body>
+
 <form action="" method="post">
     {{ form.hidden_tag() }}
     <h2>Заезд: {{ checkin }}</h2>
@@ -10,7 +11,7 @@
     <table class="table">
         {% for i in range(n) %}
 
-        <tr class="table-secondary">
+        <tr class="table-info">
             <td width="15%">{{ room_nlist[i].name }}</td>
             <td width="30%">{{ room_nlist[i].description }}</td>
             <td width="15%">{{ room_nlist[i].price }} RUR</td>
@@ -29,5 +30,5 @@
 
     <div>{{ message }}</div>
 </form>
-</body>
+</div>,
 {% endblock %}

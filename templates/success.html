@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="container-lg">
 <h1>Бронирование #{{ booknumber }} подтверждено!</h1>
-<body>
 <h2>Заезд: {{ checkin }}</h2>
 <h2>Выезд: {{ checkout }}</h2>
 <table class="table">
-    <tr class="table-secondary">
+    <tr class="table-info">
         <td width="20%">Номер</td>
         <td width="20%">Количество</td>
         <td width="20%">Стоимоcть, RUR</td>
     </tr>
     {% for el in bookingdata %}
-    <tr class="table-secondary">
+    <tr class="table-info">
         <td width="20%">{{ el[2] }}</td>
         <td width="20%">{{ el[0] }}</td>
         <td width="20%">{{ el[3] }}</td>
     </tr>
     {% endfor %}
-    <tr class="table-secondary">
+    <tr class="table-info">
         <td width="20%"></td>
         <td width="20%">Total:</td>
         <td width="20%">{{ total }}</td>
     </tr>
 </table>
-</body>
+</div>
 {% endblock %}
