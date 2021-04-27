@@ -1,20 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="container-lg">
     <h1>Canceled</h1>
-    <h1>Booking_number: {{x[-2]}}</h1>
-    <h1>Check_in: {{x[3]}}</h1>
-    <h1>Check_out: {{x[4]}}</h1>
+    <h1>Booking_number: {{x[0].number_booking}}</h1>
+    <h1>Check_in: {{x[0].check_in}}</h1>
+    <h1>Check_out: {{x[0].check_out}}</h1>
     <table class="table">
-        <tr class="light">
+        <tr class="table-info">
             <td>Room</td>
             <td>Quantity</td>
             <td>Price</td>
         </tr>
-        <tr class="light">
-            <td>{{x.rooms[1]}}</td>
-            <td>{{x[5]}}</td>
-            <td>{{x[-1}}</td>
+        {% for el in x %}
+        <tr class="table-info">
+            <td>{{el.rooms.name_room}}</td>
+            <td>{{el.quantity}}</td>
+            <td>{{el.price}}</td>
+        {% endfor %}
         </tr>
     </table>
+</div>
 {% endblock %}

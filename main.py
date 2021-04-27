@@ -278,7 +278,7 @@ def canceled(n):
             for el in booklist:
                 el.status = False
             db_sess.commit()
-            return render_template("delete.html", x=booklist)
+            return render_template("delete.html", x=booklist.all())
 
 
 @app.route('/admin/overview/', methods=['GET', 'POST'])
