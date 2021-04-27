@@ -333,7 +333,7 @@ def editday(date, code):
                 edit.quantity_rooms = form.quantity.data
                 edit.price = form.price.data
                 db_sess.commit()
-                return redirect('/overview')
+                return redirect('admin/overview')
             else:
                 abort(404)
         return render_template('edit.html', title='Редактирование', form=form, code=code, date=date)
