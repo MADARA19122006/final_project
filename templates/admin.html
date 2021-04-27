@@ -2,10 +2,8 @@
 
 {% block content %}
 <h1>Бронирования</h1>
-<body>
-{% if current_user.id == 1%}
-<p><a href="/addjob" class="btn btn-success">Добавить работу</a></p>
-{% endif %}
+
+
 <p>
 <form class="admin_form" action="" method="post">
     {{ form.hidden_tag() }}
@@ -25,7 +23,7 @@
 </p>
 <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
 </form>
-<table>
+<table class="table table-bordered">
     <tr class="table-danger">
         <td width="17%">Number_booking</td>
         <td width="8%">Room</td>
@@ -50,5 +48,5 @@
 </p>
 
 
-</body>
+
 {% endblock %}

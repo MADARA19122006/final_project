@@ -3,9 +3,9 @@
 {% block content %}
 <h1>Бронирования</h1>
 <body>
-<a class="btn btn-primary" href="/ssss/{{ datebkw }}"><<</a>
-<a class="btn btn-primary" href="/ssss/{{ datefwd }}">>></a>
-<table>
+<a class="btn btn-primary" href="/admin/overview/{{ datebkw }}"><<</a>
+<a class="btn btn-primary" href="/admin/overview/{{ datefwd }}">>></a>
+<table class="table table-bordered">
     <tr class="table-danger">
         <td width="5%" align="center">code</td>
         {% for i in date %}

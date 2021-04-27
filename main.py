@@ -281,8 +281,8 @@ def canceled(n):
             return render_template("delete.html", x=booklist)
 
 
-@app.route('/overview/', methods=['GET', 'POST'])
-@app.route('/overview/<date>', methods=['GET', 'POST'])
+@app.route('/admin/overview/', methods=['GET', 'POST'])
+@app.route('/admin/overview/<date>', methods=['GET', 'POST'])
 @login_required
 def overview(date=None):
     if current_user.is_admin:
@@ -290,7 +290,7 @@ def overview(date=None):
             date = datetime.date.today()
         else:
             date = datetime.datetime.strptime(date, '%Y%m%d').date()
-        datebkw = date - datetime.timedelta(days=14)
+        datebkw = max(date - datetime.timedelta(days=14), datetime.date.today())
         datefwd = date + datetime.timedelta(days=14)
         db_sess = db_session.create_session()
         availability = db_sess.query(Availability).filter(Availability.date >= date,
